@@ -17,6 +17,14 @@ void grid_subsampling(vector<PointXYZ>& original_points,
 	// Number of points in the cloud
 	size_t N = original_points.size();
 
+	if (N == 0)
+	{
+		subsampled_points.clear();
+		subsampled_features.clear();
+		subsampled_classes.clear();
+		return;
+	}
+
 	// Dimension of the features
 	size_t fdim = original_features.size() / N;
 	size_t ldim = original_classes.size() / N;
@@ -39,9 +47,9 @@ void grid_subsampling(vector<PointXYZ>& original_points,
 	// Create the sampled map
 	// **********************
 
-	// Verbose parameters
+	// Verbose parameters (avoid nDisp==0 -> i % nDisp SIGFPE when verbose > 1)
 	int i = 0;
-	int nDisp = N / 100;
+	int nDisp = (N >= 100) ? (int)(N / 100) : 1;
 
 	// Initialize variables
 	size_t iX, iY, iZ, mapIdx;
@@ -125,6 +133,17 @@ void batch_grid_subsampling(vector<PointXYZ>& original_points,
 
 	// Number of points in the cloud
 	size_t N = original_points.size();
+
+	if (N == 0)
+	{
+		subsampled_points.clear();
+		subsampled_features.clear();
+		subsampled_classes.clear();
+		subsampled_batches.clear();
+		for (size_t bi = 0; bi < original_batches.size(); bi++)
+			subsampled_batches.push_back(0);
+		return;
+	}
 
 	// Dimension of the features
 	size_t fdim = original_features.size() / N;
