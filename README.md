@@ -5,8 +5,17 @@ This repository contains the implementation of Kernel Point Convolution with Loc
 The code has been tested on 
 CUDA 11.3, Python 3.7.16, and torch 1.11.0
 
-# Installation  
-For installation, please refer to https://github.com/HuguesTHOMAS/KPConv-PyTorch/blob/master/INSTALL.md
+# Installation
+
+Editable install from the repository root (Python ≥3.8). Dependencies pin **PyTorch +cu124** (CUDA 12.4 runtime in the wheel), which matches typical **NVIDIA driver R550** / `nvidia-smi` CUDA 12.4. The PyTorch index is required so pip resolves `torch==…+cu124` and `torchvision==…+cu124`:
+
+```bash
+pip install -e . --extra-index-url https://download.pytorch.org/whl/cu124
+```
+
+This runs `cpp_wrappers/compile_wrappers.sh` during the build (C++ subsampling and neighbors extensions).
+
+For the original KPConv-PyTorch setup notes, see https://github.com/HuguesTHOMAS/KPConv-PyTorch/blob/master/INSTALL.md
 
 Trained models and prediction results are available at https://drive.google.com/drive/folders/1oapSEidRO8DWbKJPot3Woxi6LxXWHUmu
 

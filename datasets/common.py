@@ -51,7 +51,7 @@ def grid_subsampling(points, features=None, labels=None, sampleDl=0.1, verbose=0
     :param verbose: 1 to display
     :return: subsampled points, with features and/or labels depending of the input
     """
-    print(type(points))
+    # print(type(points))
     points = np.asarray(points, dtype=np.float32)
     
     

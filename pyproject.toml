@@ -1,0 +1,99 @@
+[build-system]
+# numpy: headers for cpp_wrappers; wrappers use cpp_utils/numpy_compat.h for NumPy 1.x / 2.x C API.
+requires = ["setuptools>=69.0", "wheel", "numpy>=1.19"]
+build-backend = "setuptools.build_meta"
+
+# Host toolchain this project is aligned with (compile cpp_wrappers / driver support):
+#   CUDA toolkit: 12.4.x (e.g. nvcc 12.4.131, /usr/local/cuda, version.json 12.4.20240328)
+#   cuDNN: 8.9.7 (e.g. CUDNN_MAJOR/MINOR/PATCHLEVEL in /usr/local/cuda/include/cudnn_version.h)
+#   NVIDIA driver: R550+ family reporting CUDA 12.4 in nvidia-smi
+#
+# PyTorch GPU wheels use the cu124 channel (CUDA 12.4 runtime bundled inside the wheel; not your
+# system libcudnn). Dependencies pin torch/torchvision to +cu124 so they match NVIDIA driver R550
+# (nvidia-smi CUDA 12.4). Default pip/PyPI torch 2.11+ may pull CUDA 13 libs and fail cuda init on
+# those drivers — always resolve torch from the PyTorch cu124 index.
+#
+#   pip install -e . --extra-index-url https://download.pytorch.org/whl/cu124
+#   # or: uv sync   (uses [tool.uv.sources] below)
+#
+# Original paper environment (see README) used Python 3.7, CUDA 11.3, torch 1.11 — use a separate
+# venv if you need that stack; it does not match the CUDA 12.4 / cuDNN 8.9 toolchain above.
+
+[project]
+name = "lca-kpconv"
+version = "0.1.0"
+description = "Kernel Point Convolution with Local Contextual Attention (PyTorch)"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+# cu124 PyTorch wheels are not published for CPython 3.7; use >=3.8 for the CUDA 12.4 stack.
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.19",
+    "scikit-learn>=0.24",
+    "PyYAML>=5.4",
+    "matplotlib>=3.3",
+    # Pinned +cu124; install with --extra-index-url https://download.pytorch.org/whl/cu124 (see header).
+    "torch==2.6.0+cu124",
+    "torchvision==0.21.0+cu124",
+    "laspy[lazrs]",
+]
+
+# Mayavi / PyQt5 are not required for train_STPLS3D.py or test_models.py. Install manually if you use
+# debug helpers in datasets/STPLS3D.py (e.g. debug_show_clouds) or utils/visualizer.py.
+[project.optional-dependencies]
+viz = ["mayavi>=4.7.4", "PyQt5>=5.12"]
+
+[project.urls]
+Homepage = "https://github.com/onurcbayrak/LCA-KPConv"
+Upstream = "https://github.com/HuguesTHOMAS/KPConv-PyTorch"
+Install = "https://github.com/HuguesTHOMAS/KPConv-PyTorch/blob/master/INSTALL.md"
+PyTorch = "https://pytorch.org/get-started/locally/"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "models*",
+    "utils*",
+    "datasets*",
+    "kernels*",
+    # Needed for `import cpp_wrappers.cpp_subsampling.grid_subsampling` etc. (exclude cpp_utils: C++ only).
+    "cpp_wrappers.cpp_subsampling*",
+    "cpp_wrappers.cpp_neighbors*",
+]
+namespaces = true
+
+# Ship compiled extensions in the wheel; exclude-package-data strips sources and per-subdir setup.py.
+[tool.setuptools.package-data]
+"cpp_wrappers.cpp_subsampling" = ["*.so", "*.pyd"]
+"cpp_wrappers.cpp_neighbors" = ["*.so", "*.pyd"]
+
+[tool.setuptools.exclude-package-data]
+"cpp_wrappers.cpp_subsampling" = [
+    "**/*.cpp",
+    "**/*.h",
+    "**/*.hpp",
+    "setup.py",
+    "build.bat",
+]
+"cpp_wrappers.cpp_neighbors" = [
+    "**/*.cpp",
+    "**/*.h",
+    "**/*.hpp",
+    "setup.py",
+    "build.bat",
+]
+
+# Run cpp_wrappers/compile_wrappers.sh during build so .so modules exist for import.
+# Uses PYTHON=sys.executable (see lca_kpconv_build._run_compile_wrappers).
+[tool.setuptools.cmdclass]
+build_py = "lca_kpconv_build.build_py_with_cpp"
+
+# uv: take torch/torchvision only from the CUDA 12.4 wheel index (matches host toolkit / driver generation).
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
+torchvision = { index = "pytorch-cu124" }
