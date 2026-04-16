@@ -4,7 +4,6 @@ from unittest import mock
 
 import numpy as np
 import pytest
-
 from datasets import common
 
 
@@ -84,3 +83,20 @@ def test_mark_degenerate_respects_minus_one_dtype(dtype):
     common.mark_degenerate_query_labels(labels, neighbors, n_support=3)
     assert labels.dtype == dtype
     assert (labels == -1).all()
+
+
+def test_mark_degenerate_query_labels_rejects_non_ndarray():
+    with pytest.raises(TypeError, match="numpy.ndarray"):
+        common.mark_degenerate_query_labels(
+            [0, 1, 2],
+            np.zeros((3, 1), dtype=np.int32),
+            n_support=1,
+        )
+
+
+def test_mark_degenerate_query_labels_rejects_readonly():
+    labels = np.array([0, 1, 2], dtype=np.int32)
+    labels.setflags(write=False)
+    neighbors = np.full((3, 1), 3, dtype=np.int32)
+    with pytest.raises(ValueError, match="writeable"):
+        common.mark_degenerate_query_labels(labels, neighbors, n_support=3)

@@ -3,7 +3,7 @@
 This repository contains the implementation of Kernel Point Convolution with Local Contextual Attention mechanism in PyTorch.
 
 The code has been tested on 
-CUDA 11.3, Python 3.7.16, and torch 1.11.0
+CUDA 12.4, Python 3.10, and torch 2.6.0
 
 # Installation
 
