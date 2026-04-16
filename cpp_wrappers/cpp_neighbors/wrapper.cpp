@@ -177,6 +177,26 @@ static PyObject* batch_neighbors(PyObject* self, PyObject* args, PyObject* keywd
 	// Number of batches
 	int Nb = (int)lca_PyArray_DIM(q_batches_array, 0);
 
+	// Zero queries: return empty (0, 1) int32 — same convention as Python batch_neighbors.
+	if (Nq == 0)
+	{
+		npy_intp empty_dims[2] = { 0, 1 };
+		PyObject* empty_arr = PyArray_SimpleNew(2, empty_dims, NPY_INT);
+		if (empty_arr == NULL)
+		{
+			Py_XDECREF(queries_array);
+			Py_XDECREF(supports_array);
+			Py_XDECREF(q_batches_array);
+			Py_XDECREF(s_batches_array);
+			return NULL;
+		}
+		Py_XDECREF(queries_array);
+		Py_XDECREF(supports_array);
+		Py_XDECREF(q_batches_array);
+		Py_XDECREF(s_batches_array);
+		return Py_BuildValue("N", empty_arr);
+	}
+
 	// Call the C++ function
 	// *********************
 
@@ -197,18 +217,17 @@ static PyObject* batch_neighbors(PyObject* self, PyObject* args, PyObject* keywd
 	//batch_ordered_neighbors(queries, supports, q_batches, s_batches, neighbors_indices, radius);
 	batch_nanoflann_neighbors(queries, supports, q_batches, s_batches, neighbors_indices, radius);
 
-	// Check result
-	if (neighbors_indices.size() < 1)
+	// No in-radius neighbors for any query (max_count == 0): one padding column per query (sentinel = Ns).
+	if ((int)neighbors_indices.size() < 1)
 	{
-		PyErr_SetString(PyExc_RuntimeError, "Error");
-		return NULL;
+		neighbors_indices.assign((size_t)Nq, Ns);
 	}
 
 	// Manage outputs
 	// **************
 
 	// Maximal number of neighbors
-	int max_neighbors = neighbors_indices.size() / Nq;
+	int max_neighbors = (int)neighbors_indices.size() / Nq;
 
 	// Dimension of output containers
 	npy_intp* neighbors_dims = new npy_intp[2];
