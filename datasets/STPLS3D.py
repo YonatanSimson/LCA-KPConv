@@ -866,7 +866,7 @@ class STPLS3DSampler(Sampler):
     """Sampler for STPLS3D"""
 
     def __init__(self, dataset: STPLS3DDataset):
-        super().__init__()  # do not pass dataset; Sampler ignores data_source since PyTorch 2.2
+        super().__init__()
 
         # Dataset used by the sampler (no copy is made in memory)
         self.dataset = dataset
