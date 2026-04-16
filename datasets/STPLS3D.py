@@ -80,8 +80,19 @@ class STPLS3DDataset(PointCloudDataset):
         # List of classes ignored during training (can be empty)
         self.ignored_labels = np.array([])
 
-        # Dataset folder
-        self.path = r"E:STPLS3D"
+        # Dataset root: set STPLS3D_DATA_ROOT; legacy Windows default below if unset.
+        _root = os.environ.get("STPLS3D_DATA_ROOT", "").strip()
+        if not _root:
+            if os.name == "nt":
+                self.path = r"E:\STPLS3D"
+            else:
+                raise ValueError(
+                    "STPLS3D dataset path not set. Export STPLS3D_DATA_ROOT to the folder "
+                    "containing your STPLS3D data (the directory os.walk uses for .ply files; "
+                    "typically includes or parents the 'train' subfolder used by this class)."
+                )
+        else:
+            self.path = _root
 
         # Type of task conducted on this dataset
         self.dataset_task = 'cloud_segmentation'
@@ -1328,20 +1339,20 @@ class STPLS3DCustomBatch:
 
         return self
 
-    def to(self, device):
+    def to(self, device, non_blocking=False):
 
-        self.points = [in_tensor.to(device) for in_tensor in self.points]
-        self.neighbors = [in_tensor.to(device) for in_tensor in self.neighbors]
-        self.pools = [in_tensor.to(device) for in_tensor in self.pools]
-        self.upsamples = [in_tensor.to(device) for in_tensor in self.upsamples]
-        self.lengths = [in_tensor.to(device) for in_tensor in self.lengths]
-        self.features = self.features.to(device)
-        self.labels = self.labels.to(device)
-        self.scales = self.scales.to(device)
-        self.rots = self.rots.to(device)
-        self.cloud_inds = self.cloud_inds.to(device)
-        self.center_inds = self.center_inds.to(device)
-        self.input_inds = self.input_inds.to(device)
+        self.points = [in_tensor.to(device, non_blocking=non_blocking) for in_tensor in self.points]
+        self.neighbors = [in_tensor.to(device, non_blocking=non_blocking) for in_tensor in self.neighbors]
+        self.pools = [in_tensor.to(device, non_blocking=non_blocking) for in_tensor in self.pools]
+        self.upsamples = [in_tensor.to(device, non_blocking=non_blocking) for in_tensor in self.upsamples]
+        self.lengths = [in_tensor.to(device, non_blocking=non_blocking) for in_tensor in self.lengths]
+        self.features = self.features.to(device, non_blocking=non_blocking)
+        self.labels = self.labels.to(device, non_blocking=non_blocking)
+        self.scales = self.scales.to(device, non_blocking=non_blocking)
+        self.rots = self.rots.to(device, non_blocking=non_blocking)
+        self.cloud_inds = self.cloud_inds.to(device, non_blocking=non_blocking)
+        self.center_inds = self.center_inds.to(device, non_blocking=non_blocking)
+        self.input_inds = self.input_inds.to(device, non_blocking=non_blocking)
 
         return self
 

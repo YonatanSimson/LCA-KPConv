@@ -11,10 +11,12 @@ SOURCES = ["../cpp_utils/cloud/cloud.cpp",
              "radius_neighbors/neighbors.cpp",
              "wrapper.cpp"]
 
-module = Extension(name="radius_neighbors",
-                    sources=SOURCES,
-                    extra_compile_args=['-std=c++11',
-                                        '-D_GLIBCXX_USE_CXX11_ABI=0'])
+module = Extension(
+    name="radius_neighbors",
+    sources=SOURCES,
+    # Default libstdc++ ABI matches modern PyTorch Linux wheels; avoid forcing old ABI=0.
+    extra_compile_args=["-std=c++11"],
+)
 
 
 setup(ext_modules=[module], include_dirs=[get_include()])

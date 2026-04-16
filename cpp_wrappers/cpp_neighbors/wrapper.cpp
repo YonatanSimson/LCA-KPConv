@@ -180,8 +180,11 @@ static PyObject* batch_neighbors(PyObject* self, PyObject* args, PyObject* keywd
 	// Zero queries: return empty (0, 1) int32 — same convention as Python batch_neighbors.
 	if (Nq == 0)
 	{
-		npy_intp empty_dims[2] = { 0, 1 };
+		npy_intp* empty_dims = new npy_intp[2];
+		empty_dims[0] = 0;
+		empty_dims[1] = 1;
 		PyObject* empty_arr = PyArray_SimpleNew(2, empty_dims, NPY_INT);
+		delete[] empty_dims;
 		if (empty_arr == NULL)
 		{
 			Py_XDECREF(queries_array);
@@ -229,13 +232,12 @@ static PyObject* batch_neighbors(PyObject* self, PyObject* args, PyObject* keywd
 	// Maximal number of neighbors
 	int max_neighbors = (int)neighbors_indices.size() / Nq;
 
-	// Dimension of output containers
+	// Dimension of output containers (heap; NumPy copies dims — free after SimpleNew)
 	npy_intp* neighbors_dims = new npy_intp[2];
-	neighbors_dims[0] = Nq;
-	neighbors_dims[1] = max_neighbors;
-
-	// Create output array
+	neighbors_dims[0] = (npy_intp)Nq;
+	neighbors_dims[1] = (npy_intp)max_neighbors;
 	PyObject* res_obj = PyArray_SimpleNew(2, neighbors_dims, NPY_INT);
+	delete[] neighbors_dims;
 	PyObject* ret = NULL;
 
 	// Fill output array with values

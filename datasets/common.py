@@ -22,17 +22,18 @@
 
 import os
 import sys
+
 # Common libs
 import time
 
-import numpy as np
-import torch
-from torch.utils.data import DataLoader, Dataset
-
 import cpp_wrappers.cpp_neighbors.radius_neighbors as cpp_neighbors
+
 # Subsampling extension
 import cpp_wrappers.cpp_subsampling.grid_subsampling as cpp_subsampling
+import numpy as np
+import torch
 from kernels.kernel_points import create_3D_rotations
+from torch.utils.data import DataLoader, Dataset
 from utils.config import Config
 from utils.mayavi_visu import *
 
@@ -225,7 +226,9 @@ def batch_neighbors(queries, supports, q_batches, s_batches, radius):
     nq = int(queries.shape[0])
     if nq == 0:
         return np.zeros((0, 1), dtype=np.int32)
-    return cpp_neighbors.batch_query(queries, supports, q_batches, s_batches, radius=radius)
+    return cpp_neighbors.batch_query(
+        queries, supports, q_batches, s_batches, radius=radius
+    )
 
 
 def degenerate_neighbor_mask(neighbors, n_support):
@@ -242,11 +245,21 @@ def degenerate_neighbor_mask(neighbors, n_support):
 def mark_degenerate_query_labels(labels, neighbors, n_support):
     """
     Set labels to -1 for queries with no valid neighbors (ignored by CrossEntropyLoss ignore_index=-1 in KPFCNN).
-    Modifies *labels* in place.
+
+    Modifies *labels* in place. *labels* must be a writeable numpy.ndarray (callers typically
+    pass ``labels = np.copy(...)`` so the batch list receives the updated buffer).
     """
-    labels_arr = np.asarray(labels)
+    if not isinstance(labels, np.ndarray):
+        raise TypeError(
+            "mark_degenerate_query_labels requires labels to be a numpy.ndarray; "
+            "use an array you intend to mutate (e.g. np.copy(labels))."
+        )
+    if not labels.flags.writeable:
+        raise ValueError(
+            "mark_degenerate_query_labels requires a writeable labels array"
+        )
     mask = degenerate_neighbor_mask(neighbors, n_support)
-    labels_arr[mask] = -1
+    labels[mask] = -1
 
 
 # ----------------------------------------------------------------------------------------------------------------------

@@ -272,22 +272,17 @@ static PyObject* batch_subsampling(PyObject* self, PyObject* args, PyObject* key
 	// Manage outputs
 	// **************
 
-	// Dimension of input containers
+	// Dimension of input containers (heap; NumPy copies dims — free after each SimpleNew)
 	npy_intp* point_dims = new npy_intp[2];
-	point_dims[0] = subsampled_points.size();
+	point_dims[0] = (npy_intp)subsampled_points.size();
 	point_dims[1] = 3;
-	npy_intp* feature_dims = new npy_intp[2];
-	feature_dims[0] = subsampled_points.size();
-	feature_dims[1] = fdim;
-	npy_intp* classes_dims = new npy_intp[2];
-	classes_dims[0] = subsampled_points.size();
-	classes_dims[1] = ldim;
-	npy_intp* batches_dims = new npy_intp[1];
-	batches_dims[0] = Nb;
-
-	// Create output array
 	PyObject* res_points_obj = PyArray_SimpleNew(2, point_dims, NPY_FLOAT);
+	delete[] point_dims;
+
+	npy_intp* batches_dims = new npy_intp[1];
+	batches_dims[0] = (npy_intp)Nb;
 	PyObject* res_batches_obj = PyArray_SimpleNew(1, batches_dims, NPY_INT);
+	delete[] batches_dims;
 	PyObject* res_features_obj = NULL;
 	PyObject* res_classes_obj = NULL;
 	PyObject* ret = NULL;
@@ -300,13 +295,21 @@ static PyObject* batch_subsampling(PyObject* self, PyObject* args, PyObject* key
 	if (use_feature)
 	{
 		size_in_bytes = subsampled_points.size() * fdim * sizeof(float);
+		npy_intp* feature_dims = new npy_intp[2];
+		feature_dims[0] = (npy_intp)subsampled_points.size();
+		feature_dims[1] = (npy_intp)fdim;
 		res_features_obj = PyArray_SimpleNew(2, feature_dims, NPY_FLOAT);
+		delete[] feature_dims;
 		memcpy(lca_PyArray_DATA(res_features_obj), subsampled_features.data(), size_in_bytes);
 	}
 	if (use_classes)
 	{
 		size_in_bytes = subsampled_points.size() * ldim * sizeof(int);
+		npy_intp* classes_dims = new npy_intp[2];
+		classes_dims[0] = (npy_intp)subsampled_points.size();
+		classes_dims[1] = (npy_intp)ldim;
 		res_classes_obj = PyArray_SimpleNew(2, classes_dims, NPY_INT);
+		delete[] classes_dims;
 		memcpy(lca_PyArray_DATA(res_classes_obj), subsampled_classes.data(), size_in_bytes);
 	}
 
@@ -511,19 +514,12 @@ static PyObject* cloud_subsampling(PyObject* self, PyObject* args, PyObject* key
 	// Manage outputs
 	// **************
 
-	// Dimension of input containers
+	// Dimension of input containers (heap; NumPy copies dims — free after each SimpleNew)
 	npy_intp* point_dims = new npy_intp[2];
-	point_dims[0] = subsampled_points.size();
+	point_dims[0] = (npy_intp)subsampled_points.size();
 	point_dims[1] = 3;
-	npy_intp* feature_dims = new npy_intp[2];
-	feature_dims[0] = subsampled_points.size();
-	feature_dims[1] = fdim;
-	npy_intp* classes_dims = new npy_intp[2];
-	classes_dims[0] = subsampled_points.size();
-	classes_dims[1] = ldim;
-
-	// Create output array
 	PyObject* res_points_obj = PyArray_SimpleNew(2, point_dims, NPY_FLOAT);
+	delete[] point_dims;
 	PyObject* res_features_obj = NULL;
 	PyObject* res_classes_obj = NULL;
 	PyObject* ret = NULL;
@@ -534,13 +530,21 @@ static PyObject* cloud_subsampling(PyObject* self, PyObject* args, PyObject* key
 	if (use_feature)
 	{
 		size_in_bytes = subsampled_points.size() * fdim * sizeof(float);
+		npy_intp* feature_dims = new npy_intp[2];
+		feature_dims[0] = (npy_intp)subsampled_points.size();
+		feature_dims[1] = (npy_intp)fdim;
 		res_features_obj = PyArray_SimpleNew(2, feature_dims, NPY_FLOAT);
+		delete[] feature_dims;
 		memcpy(lca_PyArray_DATA(res_features_obj), subsampled_features.data(), size_in_bytes);
 	}
 	if (use_classes)
 	{
 		size_in_bytes = subsampled_points.size() * ldim * sizeof(int);
+		npy_intp* classes_dims = new npy_intp[2];
+		classes_dims[0] = (npy_intp)subsampled_points.size();
+		classes_dims[1] = (npy_intp)ldim;
 		res_classes_obj = PyArray_SimpleNew(2, classes_dims, NPY_INT);
+		delete[] classes_dims;
 		memcpy(lca_PyArray_DATA(res_classes_obj), subsampled_classes.data(), size_in_bytes);
 	}
 
